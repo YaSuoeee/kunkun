@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #box{
+            margin: 0 auto;
+            width: 800px;
+            visibility: hidden;
+        }
+        canvas{
+            background-image: url("b.png");
+            background-size: 100% 100%;
+            position: absolute;
+        }
+        #score{
+            position: absolute;
+            padding-left: 50px;
+            padding-top: 20px;
+            color: brown;
+            font-size: 50px;
+            font-family: sans-serif;
+        }
+        #box2 img {
+            width: 50px;
+            float: right;
+        }
+        #box2 {
+            width: 300px;
+            border: 0;
+            position: absolute;
+            top: 10px;
+            left: 1200px;
+        }
+        #stop{
+            position: absolute;
+            top: 10px;
+            left: 1500px;
+        }
+        #stop img{
+            width: 50px;
+            float: right;
+        }
+        #start{
+            position: absolute;
+            height: 100%;
+            width: 100% ;
+            background-image: url("u=3687436847,3439699260&fm=26&gp=0.png");
+            background-size: 100% 100%;
+        }
+        #end{
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background-image: url("end.jpg");
+            background-size: 100% 100%;
+            visibility: hidden;
+        }
+        #btn{
+            position: absolute;
+            background-size: 100% 100%;
+            left: 1000px;
+            top: 800px;
+        }
+        #con{
+            position: absolute;
+            background-size: 100% 100%;
+            top: 800px;
+        }
+        #ts{
+            position: absolute;
+            left: 1150px;
+            top: 900px;
+            font-size: 30px;
+            font-family: 华文宋体;
+            color: purple;
+            font-weight: bolder;
+        }
+    </style>
+</head>
+<body>
+<audio src="2938445960.mp3" loop="loop" class="music"></audio>
+<audio src="%5B铃声%5D14172291132.mp3" loop="loop" class="music"></audio>
+<img src="cxk.png" alt="" id="imgs" style="display: none">
+<img src="lanqiu.png" alt="" id="imgs1" style="display: none">
+<div id="start">
+    <img src="bt.png" alt="" id="btn">
+</div>
+<div id="end">
+    <img src="contiue.png" alt="" id="con">
+</div>
+    <div id="box">
+        <canvas id="cvs" width="800" height="800" style="border: 1px solid black" ></canvas>
+        <div id="box2">
+            <img src="ji.png" alt="5">
+            <img src="ji.png" alt="5">
+            <img src="ji.png" alt="5">
+        </div>
+        <div id="stop">
+            <img src="暂停.png" alt="" id="sbtn">
+        </div>
+        <div id="score">score: <span>0</span></div>
+        <div id="ts">按空格键跳跃</div>
+    </div>
+<script>
+    var cvs = document.getElementById('cvs');
+    var ctx = cvs.getContext('2d');
+    var score = document.getElementById('score');
+    var img = document.getElementById('imgs');
+    var img1 = document.getElementById('imgs1');
+    var span = score.getElementsByTagName('span')[0];
+    var box2 = document.getElementById('box2');
+    var btn = document.getElementById("btn");
+    var con = document.getElementById('con');
+    var sbtn = document.getElementById('sbtn');
+    var music = document.getElementsByClassName('music');
+    var Ggame = null;
+    var timer = null;
+    var v = 5;
+    btn.onclick = function () {
+        start.style.visibility = 'hidden';
+        box.style.visibility = 'visible';
+        onLoad();
+    };
+    con.onclick = function () {
+        start.style.visibility = 'visible';
+        end.style.visibility = 'hidden';
+        location.reload();
+    };
+    sbtn.onclick = function () {
+            sbtn.src = "restart.png";
+            setTimeout(function () {
+                alert('已暂停');
+                sbtn.src = "暂停.png";
+            },100)
+    };
+    function onLoad() {
+        playmusic(0);
+        Ggame = new Game();
+        Ggame.render();
+        Ggame.update();
+    }
+    //播放音乐
+    function playmusic(a) {
+        for(var i = 0; i < music.length; i++) {
+            music[i].pause();
+        }
+        music[a].play();
+    }
+    function Game() {
+       var _this = this;
+       this.frame = 0;
+       this.life = 3;
+       this.lastFrame = 0;
+       this.CDCode = 120;
+       this.balls= [];
+       this.score = 0;
+       this.peo = null;
+       this.render = function () {
+           _this.peo = new Qq();
+       };
+       this.update = function () {
+           _this.frame ++;
+           ctx.clearRect(0,0,cvs.width,cvs.height);
+           _this.peo.draw();
+           _this.peo.updatePos();
+           if (_this.frame >= _this.lastFrame + _this.CDCode) {
+               _this.balls.push(new Ball());
+               _this.lastFrame = _this.frame;
+           }
+           _this.balls.forEach(function (val) {
+               var dx = Math.abs(val.positionX - _this.peo.xx);
+               var dy = Math.abs(val.positionY - _this.peo.yy);
+               if (dx < 50 && dy < 130 &&_this.life >=1){
+                   val.dead = true;
+                   _this.score --;
+                   _this.life--;
+                   var img3 = box2.getElementsByTagName('img')[0];
+                   box2.removeChild(img3);
+               if (_this.life == 0){
+                   setTimeout(function () {
+                       end.style.visibility = 'visible';
+                       playmusic(1);
+                       box.style.visibility = 'hidden';
+                   });
+               } }
+           });
+           _this.balls.forEach(function (val,index) {
+               val.draw();
+               val.updatePos();
+               val.updateStatus();
+               if (val.dead){
+                   _this.balls.splice(index,1);
+                   _this.score ++;
+                   span.innerHTML =  _this.score;
+               }
+           });
+           for (var i = 0;i < 25;i++){
+               if (_this.score == 5 * i){
+                        v = 5 + 2 * i;
+               }
+           }
+           window.requestAnimationFrame(_this.update);
+       }
+    }
+//随机篮球
+    function Ball() {
+        var _this = this;
+        this.dead = false;
+        this.positionX = 800;
+        this.positionY = Math.random()*200 + 550;
+        this.angle = 180;
+        this.draw = function () {
+            ctx.beginPath();
+            ctx.drawImage(img1,0,0,img1.width,img1.height,_this.positionX,_this.positionY,50,50);
+            ctx.stroke();
+        };
+        this.updatePos = function () {
+            var dt = 1;
+            _this.positionX += v * dt * Math.cos(_this.angle*Math.PI/180);};
+        this.updateStatus = function () {
+            if (_this.positionX < 0){
+                _this.dead =true;
+            }
+        }
+    }
+    //人物
+     function Qq() {
+        var _this = this;
+        this.xx = 0;
+        this.yy = 780;
+        this.v = 80;
+        this.t = 0;
+        this.g = -10;
+        this.flag = false;
+        this.flag2 = false;
+         this.draw = function () {
+             ctx.beginPath();
+             ctx.drawImage(img,0,0,img.width,img.height,_this.xx-50,_this.yy-100,150,150);
+             ctx.stroke();
+         };
+         document.onkeyup = function (e) {
+             switch (e.keyCode) {
+                 case 32:
+                     _this.flag2 = false;
+                     break;
+             }
+         };
+         document.onkeydown = function (ev) {
+             switch (ev.keyCode) {
+                 case 39:
+                     _this.xx += 3;
+                     break;
+                 case 37:
+                     _this.xx -= 3;
+                     break;
+                 case 32: {
+                     if (!_this.flag && !_this.flag2) {
+                         _this.flag = true;
+                         _this.flag2 = true;
+                         timer = setInterval(function () {
+                             _this.t += 0.1;
+                             var s = _this.v * _this.t + 1 / 2 * _this.g * _this.t * _this.t;
+                             _this.yy = 770 - s;
+                             if (s <= 0) {
+                                 clearInterval(timer);
+                                 _this.t = 0;
+                                 _this.flag = false;
+                             }
+                         });
+                     }
+                     break;
+                 }
+             }
+         };
+
+         this.updatePos = function () {
+                 if (_this.xx < 25) {
+                     _this.xx = 25;
+                 }
+                 if (_this.xx > 750) {
+                     _this.xx = 750;
+                 }
+             }
+         }
+</script>
+</body>
+</html>
